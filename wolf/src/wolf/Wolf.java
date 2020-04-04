@@ -52,7 +52,8 @@ public class Wolf {
                 + "1. INSERT\n"
                 + "2. UPDATE\n"
                 + "3. DELETE\n"
-                + "4. QUIT\n");
+                + "4. Generate "
+                + "5. QUIT\n");
     }
 
     public static void main(String[] args) {
@@ -60,7 +61,7 @@ public class Wolf {
         try {
 
             String mainMenu = "";
-            String tableName;
+            String tableName = "";
 
             Class.forName("org.mariadb.jdbc.Driver");
             Connection connection = null;
@@ -75,7 +76,8 @@ public class Wolf {
 
                     mainMenu = getMainMenu();
 
-                    tableName = getTableNames();
+                    if (Integer.parseInt(mainMenu) < 4)
+                        tableName = getTableNames();
 
                     result = statement.executeQuery("DESC " + tableName);
                     int count = 0;
