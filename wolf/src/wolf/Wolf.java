@@ -25,7 +25,7 @@ public class Wolf {
     private static final String password = "200314451";
 
     public static String getTableNames(){
-        return JOptionPane.showInputDialog("Type tablename for respective table\n" +
+        return JOptionPane.showInputDialog("Type table name for respective table\n" +
                 "1. ARTICLEHAS\n" +
                 "2. ARTICLES\n" +
                 "3. AUTHORS\n" +
@@ -52,8 +52,9 @@ public class Wolf {
                 + "1. INSERT\n"
                 + "2. UPDATE\n"
                 + "3. DELETE\n"
-                + "4. GENERATE\n "
-                + "5. QUIT\n");
+                + "4. GENERATE\n"
+                + "5. Order Creation for Distributor\n"
+                + "6. QUIT\n");
     }
     
     public static String getReportOption() {
@@ -80,9 +81,9 @@ public class Wolf {
             Connection connection = null;
             Statement statement = null;
             ResultSet result = null;
-            if(mainMenu == "QUIT") 
+            if(mainMenu == "6")
                 return;
-            while (!mainMenu.equals("QUIT")) {
+            while (!mainMenu.equals("6")) {
 
                 try {
                     connection = DriverManager.getConnection(jdbcURL, user, password);
@@ -105,17 +106,18 @@ public class Wolf {
                                 String insquery = JOptionPane.showInputDialog("Enter the new row details");
                                 ResultSet success = statement.executeQuery("INSERT INTO " + tableName + " VALUES (" + insquery + ");");
                                 System.out.println(success);
-                                JOptionPane.showMessageDialog(null, "Succesfull");
+                                JOptionPane.showMessageDialog(null, "Inserted successfully");
                                 break;
                             case "2":
                                 String updquery = JOptionPane.showInputDialog("Finish the remaining \nUPDATE " + tableName + " SET ");
                                 result = statement.executeQuery("UPDATE " + tableName + " SET " + updquery);
-                                System.out.print("updated");
+                                JOptionPane.showMessageDialog(null, "Updated successfully");
                                 break;
                             case "3":
                                 String colname = JOptionPane.showInputDialog("Enter the column name followed by the value to delete");
                                 String vall = JOptionPane.showInputDialog("");
                                 result = statement.executeQuery("DELETE FROM " + tableName + " WHERE " + colname + "= " + vall);
+                                JOptionPane.showMessageDialog(null, "Deleted successfully");
                                 System.out.print("DELETE FROM " + tableName + " WHERE " + colname + "= " + vall);
                                 break;
                             case "0":
@@ -365,6 +367,65 @@ public class Wolf {
                                     }
                         }
                         
+                    }
+                    else if(Integer.parseInt(mainMenu) == 5)
+                    {
+                        try {
+                            connection.setAutoCommit(false);
+                            String insquery = JOptionPane.showInputDialog("Enter the ORDER details: distributorID, publicationID, orderID, No of Copies, Order Date, Delivery Date, Price, Shipping Cost");
+
+                            String[] itemsArray;
+                            itemsArray = insquery.split(",");
+
+                            Float costOfOrder = Float.parseFloat(itemsArray[3]) * Float.parseFloat(itemsArray[6]) + Float.parseFloat(itemsArray[7]);
+
+                            String sqlStatement = "INSERT INTO ORDERS VALUES (";
+                            for(int i=2; i<itemsArray.length; i++)
+                            {
+                                sqlStatement += itemsArray[i] ;
+                                if (i != itemsArray.length-1){
+                                    sqlStatement += ",";
+                                }
+                            }
+                            sqlStatement += ");";
+                            System.out.println(sqlStatement);
+                            ResultSet success = statement.executeQuery(sqlStatement);
+                            System.out.println(success);
+
+                            //Constant Publishing House ID
+                            sqlStatement = "INSERT INTO SENDS VALUES (" + itemsArray[2] + ",1," + itemsArray[0] +");";
+
+                            success = statement.executeQuery(sqlStatement);
+                            System.out.println(success);
+
+                            ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '1'");
+
+                            if(rs.next()){
+                                Float currentBalance = Float.parseFloat(rs.getString("BALANCE"));
+                                currentBalance += costOfOrder;
+                                sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '1';";
+                                success = statement.executeQuery(sqlStatement);
+                                System.out.println(success);
+
+                            }
+                            else
+                            {
+                                //Constant Publishing House ID
+                                sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+"1"+","+ Float.toString(costOfOrder)+")";
+                            }
+
+                            success = statement.executeQuery(sqlStatement);
+                            System.out.println(success);
+
+                            JOptionPane.showMessageDialog(null, "Inserted successfully");
+                            connection.commit();
+
+                        } catch (SQLException e) {
+                            connection.rollback();
+                            e.printStackTrace();
+                        } finally {
+                            connection.setAutoCommit(true);
+                        }
                     }
 
                 } catch (Throwable oops) {
