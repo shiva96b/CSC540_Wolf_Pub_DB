@@ -372,6 +372,7 @@ public class Wolf {
                     else if(Integer.parseInt(mainMenu) == 6)
                     {
                         try {
+                            // Start of DB Transaction
                             connection.setAutoCommit(false);
                             String insquery = JOptionPane.showInputDialog("Enter the ORDER details: distributorID, publicationID, orderID, No of Copies, Order Date, Delivery Date, Price, Shipping Cost");
 
@@ -380,6 +381,7 @@ public class Wolf {
 
                             Float costOfOrder = Float.parseFloat(itemsArray[3]) * Float.parseFloat(itemsArray[6]) + Float.parseFloat(itemsArray[7]);
 
+                            // Insert Record into ORDERS TABLE
                             String sqlStatement = "INSERT INTO ORDERS VALUES (";
                             for(int i=2; i<itemsArray.length; i++)
                             {
@@ -399,9 +401,11 @@ public class Wolf {
                             success = statement.executeQuery(sqlStatement);
                             System.out.println(success);
 
+                            // Retrieve the current balance for the given Publication House and Distributor
                             ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '1'");
 
                             if(rs.next()){
+                                // If a balance exists
                                 Float currentBalance = Float.parseFloat(rs.getString("BALANCE"));
                                 currentBalance += costOfOrder;
                                 sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '1';";
@@ -411,7 +415,7 @@ public class Wolf {
                             }
                             else
                             {
-                                //Constant Publishing House ID
+                                // If this is the first transaction between the given Distributor and Publication
                                 sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+"1"+","+ Float.toString(costOfOrder)+")";
                             }
 
@@ -422,6 +426,7 @@ public class Wolf {
                             connection.commit();
 
                         } catch (SQLException e) {
+                            // Rollback if any of the above queries fail
                             connection.rollback();
                             e.printStackTrace();
                         } finally {
@@ -430,6 +435,7 @@ public class Wolf {
                     }
                     else if(Integer.parseInt(mainMenu) == 7){
                         try {
+                            // Start of DB Transaction
                             connection.setAutoCommit(false);
                             String insquery = JOptionPane.showInputDialog("Enter the PAYMENT details: distributor ID, publication House ID, Date, Amount");
 
@@ -452,9 +458,11 @@ public class Wolf {
                             System.out.println(success);
 
                             //Constant Publishing House ID
+                            // Retrieve the current balance for the given Publication House and Distributor
                             ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '"+ itemsArray[1]+"'");
 
                             if(rs.next()){
+                                // If a balance exists
                                 Float currentBalance = Float.parseFloat(rs.getString("BALANCE"));
                                 currentBalance -= payment;
                                 sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = " + itemsArray[1] +";";
@@ -465,6 +473,7 @@ public class Wolf {
                             else
                             {
                                 //Constant Publishing House ID
+                                // If this is the first transaction between the given Distributor and Publication
                                 payment *= -1;
                                 sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+ itemsArray[1] +","+ Float.toString(payment)+")";
                             }
@@ -476,6 +485,7 @@ public class Wolf {
                             connection.commit();
 
                         } catch (SQLException e) {
+                            // Rollback if any of the above queries fail
                             connection.rollback();
                             e.printStackTrace();
                         } finally {
