@@ -48,13 +48,14 @@ public class Wolf {
 
     public static String getMainMenu(){
         return JOptionPane.showInputDialog("Input number for respective mainMenu \n"
-                + "0. SELECT\n"
-                + "1. INSERT\n"
-                + "2. UPDATE\n"
-                + "3. DELETE\n"
-                + "4. GENERATE\n"
-                + "5. Order Creation for Distributor\n"
-                + "6. QUIT\n");
+                + "1. SELECT\n"
+                + "2. INSERT\n"
+                + "3. UPDATE\n"
+                + "4. DELETE\n"
+                + "5. GENERATE\n"
+                + "6. Order Creation for Distributor\n"
+                + "7. Distributor Payment"
+                + "0. QUIT\n");
     }
     
     public static String getReportOption() {
@@ -81,9 +82,9 @@ public class Wolf {
             Connection connection = null;
             Statement statement = null;
             ResultSet result = null;
-            if(mainMenu == "6")
+            if(mainMenu == "0")
                 return;
-            while (!mainMenu.equals("6")) {
+            while (!mainMenu.equals("0")) {
 
                 try {
                     connection = DriverManager.getConnection(jdbcURL, user, password);
@@ -91,7 +92,7 @@ public class Wolf {
 
                     mainMenu = getMainMenu();
 
-                    if (Integer.parseInt(mainMenu) < 4) {
+                    if (Integer.parseInt(mainMenu) <= 4) {
                         tableName = getTableNames();
                         result = statement.executeQuery("DESC " + tableName);
                         int count = 0;
@@ -136,7 +137,7 @@ public class Wolf {
                                 }
                         }
                     }
-                    else if(Integer.parseInt(mainMenu) == 4) {
+                    else if(Integer.parseInt(mainMenu) == 5) {
                         String reportOption;
                         reportOption = getReportOption();
                         if(reportOption.equals("1") || reportOption.equals("2")) {
@@ -368,7 +369,7 @@ public class Wolf {
                         }
                         
                     }
-                    else if(Integer.parseInt(mainMenu) == 5)
+                    else if(Integer.parseInt(mainMenu) == 6)
                     {
                         try {
                             connection.setAutoCommit(false);
@@ -412,6 +413,60 @@ public class Wolf {
                             {
                                 //Constant Publishing House ID
                                 sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+"1"+","+ Float.toString(costOfOrder)+")";
+                            }
+
+                            success = statement.executeQuery(sqlStatement);
+                            System.out.println(success);
+
+                            JOptionPane.showMessageDialog(null, "Inserted successfully");
+                            connection.commit();
+
+                        } catch (SQLException e) {
+                            connection.rollback();
+                            e.printStackTrace();
+                        } finally {
+                            connection.setAutoCommit(true);
+                        }
+                    }
+                    else if(Integer.parseInt(mainMenu) == 7){
+                        try {
+                            connection.setAutoCommit(false);
+                            String insquery = JOptionPane.showInputDialog("Enter the PAYMENT details: distributor ID, publication House ID, Date, Amount");
+
+                            String[] itemsArray;
+                            itemsArray = insquery.split(",");
+
+                            Float payment = Float.parseFloat(itemsArray[3]);
+
+                            String sqlStatement = "INSERT INTO DISTRIBUTORPAYS VALUES (";
+                            for(int i=0; i<itemsArray.length; i++)
+                            {
+                                sqlStatement += itemsArray[i] ;
+                                if (i != itemsArray.length-1){
+                                    sqlStatement += ",";
+                                }
+                            }
+                            sqlStatement += ");";
+                            System.out.println(sqlStatement);
+                            ResultSet success = statement.executeQuery(sqlStatement);
+                            System.out.println(success);
+
+                            //Constant Publishing House ID
+                            ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '"+ itemsArray[1]+"'");
+
+                            if(rs.next()){
+                                Float currentBalance = Float.parseFloat(rs.getString("BALANCE"));
+                                currentBalance -= payment;
+                                sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = " + itemsArray[1] +";";
+                                success = statement.executeQuery(sqlStatement);
+                                System.out.println(success);
+
+                            }
+                            else
+                            {
+                                //Constant Publishing House ID
+                                payment *= -1;
+                                sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+ itemsArray[1] +","+ Float.toString(payment)+")";
                             }
 
                             success = statement.executeQuery(sqlStatement);
