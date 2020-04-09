@@ -54,7 +54,7 @@ public class Wolf {
                 + "4. DELETE\n"
                 + "5. GENERATE\n"
                 + "6. Order Creation for Distributor\n"
-                + "7. Distributor Payment"
+                + "7. Distributor Payment\n"
                 + "0. QUIT\n");
     }
     
