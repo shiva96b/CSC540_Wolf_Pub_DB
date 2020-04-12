@@ -17,13 +17,13 @@ public class Wolf {
 
 
     // Update your user info alone here
-    private static final String jdbcURL = "jdbc:mariadb://classdb2.csc.ncsu.edu:3306/mravind"; // Using SERVICE_NAME
+    private static final String jdbcURL = "jdbc:mariadb://classdb2.csc.ncsu.edu:3306/mravind";
 
-// Update your user and password info here!
-
+    // Update your user and password info here!
     private static final String user = "mravind";
     private static final String password = "200314451";
 
+    // Menu to get the Table Names for SELECT, UPDATE and DELETE Operations
     public static String getTableNames(){
         return JOptionPane.showInputDialog("Type table name for respective table\n" +
                 "1. ARTICLEHAS\n" +
@@ -46,6 +46,7 @@ public class Wolf {
                 "18. SENDS");
     }
 
+    // Main Menu Options
     public static String getMainMenu(){
         return JOptionPane.showInputDialog("Input number for respective mainMenu \n"
                 + "1. SELECT\n"
@@ -57,7 +58,8 @@ public class Wolf {
                 + "7. Distributor Payment\n"
                 + "0. QUIT\n");
     }
-    
+
+    // Generate Report Options
     public static String getReportOption() {
         return JOptionPane.showInputDialog("Input number for respective report generation\n"
                 + "1. Find book\n"
@@ -82,11 +84,15 @@ public class Wolf {
             Connection connection = null;
             Statement statement = null;
             ResultSet result = null;
+
+            // QUIT
             if(mainMenu == "0")
                 return;
+
             while (!mainMenu.equals("0")) {
 
                 try {
+                    // Connecting to the Maria Database
                     connection = DriverManager.getConnection(jdbcURL, user, password);
                     statement = connection.createStatement();
 
@@ -94,34 +100,45 @@ public class Wolf {
 
                     if (Integer.parseInt(mainMenu) <= 4) {
                         tableName = getTableNames();
+
+                        // Executing the Describe Table query to get the column details
                         result = statement.executeQuery("DESC " + tableName);
                         int count = 0;
+
                         while (result.next()) {
                             String name = result.getString("Field");
                             String type = result.getString("Type");
                             System.out.println(name + " " + type);
                             count = count + 1;
                         }
+
                         switch (mainMenu) {
-                            case "1":
+                            case "2":
+                                // Insert into Table
                                 String insquery = JOptionPane.showInputDialog("Enter the new row details");
                                 ResultSet success = statement.executeQuery("INSERT INTO " + tableName + " VALUES (" + insquery + ");");
                                 System.out.println(success);
                                 JOptionPane.showMessageDialog(null, "Inserted successfully");
                                 break;
-                            case "2":
+
+                            case "3":
+                                // Update rows in Table
                                 String updquery = JOptionPane.showInputDialog("Finish the remaining \nUPDATE " + tableName + " SET ");
                                 result = statement.executeQuery("UPDATE " + tableName + " SET " + updquery);
                                 JOptionPane.showMessageDialog(null, "Updated successfully");
                                 break;
-                            case "3":
+
+                            case "4":
+                                // Delete from Table
                                 String colname = JOptionPane.showInputDialog("Enter the column name followed by the value to delete");
                                 String vall = JOptionPane.showInputDialog("");
                                 result = statement.executeQuery("DELETE FROM " + tableName + " WHERE " + colname + "= " + vall);
                                 JOptionPane.showMessageDialog(null, "Deleted successfully");
                                 System.out.print("DELETE FROM " + tableName + " WHERE " + colname + "= " + vall);
                                 break;
-                            case "0":
+
+                            case "1":
+                                // Select Statement execution
                                 result = statement.executeQuery("DESC " + tableName);
                                 while (result.next()) {
                                     String name = result.getString("Field");
@@ -138,8 +155,10 @@ public class Wolf {
                         }
                     }
                     else if(Integer.parseInt(mainMenu) == 5) {
+                        // Generate Report Query Execution with sub Operations
                         String reportOption;
                         reportOption = getReportOption();
+
                         if(reportOption.equals("1") || reportOption.equals("2")) {
                             String by = JOptionPane.showInputDialog("Input the attribute by which you want to select\n"
                                     + "1. TOPIC\n"
@@ -148,17 +167,19 @@ public class Wolf {
                             
                             if(reportOption.equals("1")) {
                                 switch(by) {
-                                case "1": String value = JOptionPane.showInputDialog("Input the topic by which you want to select\n");
+                                    // Find Book by Topic
+                                    case "1": String value = JOptionPane.showInputDialog("Input the topic by which you want to select\n");
                                               result = statement.executeQuery("SELECT * FROM BOOK B WHERE B.PUBID = (SELECT P.PUBID FROM PUBLICATION P WHERE P.GENRE = '" + value + "');");
                                               ResultSetMetaData meta = result.getMetaData();
-                                              
+
                                               while(result.next()) {
                                                   for(int i=1; i<=meta.getColumnCount(); i++)
                                                     System.out.print(result.getString(i) + "\t");
                                                   System.out.println();
                                               }
                                               break;
-                                case "2": value = JOptionPane.showInputDialog("Input the date(yyyy/mm/dd) by which you want to select\n");
+                                    // Find Book by Date
+                                    case "2": value = JOptionPane.showInputDialog("Input the date(yyyy/mm/dd) by which you want to select\n");
                                               result = statement.executeQuery("SELECT * FROM BOOK B WHERE B.PUBID = (SELECT PUBID FROM PUBLICATION P WHERE P.DATE = '" + value + "');");
                                               meta = result.getMetaData();
                                               
@@ -168,7 +189,8 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
-                                case "3": value = JOptionPane.showInputDialog("Input the author by which you want to select\n");
+                                    // Find Book by Author
+                                    case "3": value = JOptionPane.showInputDialog("Input the author by which you want to select\n");
                                               result = statement.executeQuery("SELECT B.PUBID, B.ISBN, B.EDITIONNO FROM BOOK B, BOOKHAS BH, AUTHORS A WHERE B.PUBID = BH.PUBID "
                                                       + "AND BH.AUTHORSSN = A.AUTHORSSN AND A.NAME = '" + value + "';");
                                               meta = result.getMetaData();
@@ -183,7 +205,8 @@ public class Wolf {
                         }
                             else if(reportOption.equals("2")) {
                                 switch(by) {
-                                case "1": String value = JOptionPane.showInputDialog("Input the topic by which you want to select\n");
+                                    // Find Article by Topic
+                                    case "1": String value = JOptionPane.showInputDialog("Input the topic by which you want to select\n");
                                               result = statement.executeQuery("SELECT * FROM ARTICLES A WHERE A.PUBID = (SELECT P.PUBID FROM PUBLICATION P WHERE P.GENRE = '" + value + "');");
                                               ResultSetMetaData meta = result.getMetaData();
                                               
@@ -193,7 +216,8 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
-                                case "2": value = JOptionPane.showInputDialog("Input the date(yyyy/mm/dd) by which you want to select\n");
+                                    // Find Article by Date
+                                    case "2": value = JOptionPane.showInputDialog("Input the date(yyyy/mm/dd) by which you want to select\n");
                                               result = statement.executeQuery("SELECT * FROM ARTICLES A WHERE A.PUBID = (SELECT PUBID FROM PUBLICATION P WHERE P.DATE = '" + value + "');");
                                               meta = result.getMetaData();
                                               
@@ -203,7 +227,8 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
-                                case "3": value = JOptionPane.showInputDialog("Input the author by which you want to select\n");
+                                    // Find Article by Author
+                                    case "3": value = JOptionPane.showInputDialog("Input the author by which you want to select\n");
                                               result = statement.executeQuery("SELECT A.ARTICLEID, A.TITLE, A.TEXT FROM ARTICLES A, ARTICLEHAS AH, AUTHORS AU WHERE A.ARTICLEID = AH.ARTICLEID "
                                                       + "AND AH.AUTHORSSN = AU.AUTHORSSN AND AU.NAME = '" + value + "';");
                                               meta = result.getMetaData();
@@ -218,6 +243,7 @@ public class Wolf {
                         }
                     }
                         switch(reportOption) {
+                            // Generate Balance
                             case "3": String value = JOptionPane.showInputDialog("Input the distributor ID\n");
                                       result = statement.executeQuery("SELECT DISTID, ROUND(SUM(BALANCE),2) AS BALANCE FROM OWES WHERE DISTID = " + value + ";");
                                       ResultSetMetaData meta = result.getMetaData();
@@ -228,6 +254,7 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
+                            // Number and total price of each publication bought per distributor per month
                             case "4": result = statement.executeQuery("SELECT B.PUBID, B.DISTID, MONTH(A.ORDERDATE) AS PERMONTH, YEAR(A.ORDERDATE) AS PERYEAR, "
                                     + "ROUND(SUM(A.PRICE), 2) AS TOTALPRICE, SUM(NOOFCOPIES) AS NOOFCOPIES FROM ORDERS A, SENDS B WHERE A.ORDERID=B.ORDERID"
                                     + " GROUP BY B.PUBID, B.DISTID, MONTH(A.ORDERDATE), YEAR(A.ORDERDATE);");
@@ -239,6 +266,7 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
+                            // Total revenue of each publishing house
                             case "5": result = statement.executeQuery("SELECT P.PUBHOUSEID, MONTH(D.PAYDATE) AS MONTH, YEAR(D.PAYDATE) AS YEAR, "
                                     + "ROUND(SUM(AMOUNT), 2) AS REVENUE FROM DISTRIBUTORPAYS D, PUBLISHINGHOUSE P WHERE D.PUBHOUSEID = P.PUBHOUSEID "
                                     + "GROUP BY P.PUBHOUSEID, MONTH(D.PAYDATE), YEAR(D.PAYDATE)");
@@ -250,6 +278,7 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
+                            // Total expenses of each publishing house
                             case "6": result = statement.executeQuery("SELECT PUBHOUSEID,  MONTH, YEAR, ROUND(SUM(COST),2) AS EXPENSE " +
                                                 "FROM " +
                                                 "(SELECT P.PUBHOUSEID, ROUND(SUM(O.SHIPPINGCOST),2) AS COST, MONTH(O.ORDERDATE) AS MONTH, YEAR(O.ORDERDATE) AS YEAR " +
@@ -271,6 +300,7 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
+                            // Total current number of distributors for each publishing house
                             case "7": result = statement.executeQuery("SELECT P.NAME, COUNT(*) AS NOOFDISTRIBUTORS FROM OWES O, PUBLISHINGHOUSE P WHERE "
                                     + "O.PUBHOUSEID = P.PUBHOUSEID GROUP BY P.NAME;");
                                             meta = result.getMetaData();
@@ -281,6 +311,7 @@ public class Wolf {
                                                   System.out.println();
                                               }
                                               break;
+                            // Total revenue
                             case "8": String by = JOptionPane.showInputDialog("Input the attribute by which you want to calculate revenue for\n"
                                     + "1. CITY\n"
                                     + "2. DISTRIBUTOR\n"
@@ -319,6 +350,7 @@ public class Wolf {
                                               }
                                     }
                                     break;
+                             // Total payments to editors and authors per work type
                             case "9": by = JOptionPane.showInputDialog("Input the attribute by which you want to calculate payment for\n"
                                     + "1. WORK TYPE\n"
                                     + "2. TIME PERIOD\n");
@@ -494,9 +526,11 @@ public class Wolf {
                     }
 
                 } catch (Throwable oops) {
+                    // Catch any error thrown by the application
                     JOptionPane.showMessageDialog(null, "There was an error while executing the query");
                     oops.printStackTrace();
                 } finally {
+                    // Closing Connection
                     close(result);
                     close(statement);
                     close(connection);
@@ -506,6 +540,8 @@ public class Wolf {
             oops.printStackTrace();
         }
     }
+
+    // Function Overloading for closing the connection
     static void close(Connection connection) {
         if(connection != null) {
             try {
