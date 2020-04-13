@@ -12,6 +12,7 @@ package wolf;
 
 import java.sql.*;
 import javax.print.DocFlavor;
+import javax.print.PrintException;
 import javax.swing.*;
 
 public class Wolf {
@@ -471,9 +472,10 @@ public class Wolf {
                             System.out.println(success);
 
                             //Constant Publishing House ID
-                            sqlStatement = "INSERT INTO SENDS VALUES (" + itemsArray[2] + ",1," + itemsArray[0] +");";
+                            sqlStatement = "INSERT INTO SENDS VALUES (" + itemsArray[2] + "," + itemsArray[1] + "," + itemsArray[0] +");";
 
                             success = statement.executeQuery(sqlStatement);
+
                             System.out.println(success);
 
                             // Retrieve the current balance for the given Publication House and Distributor
@@ -512,35 +514,39 @@ public class Wolf {
                         try {
                             // Start of DB Transaction
                             connection.setAutoCommit(false);
-                            String insquery = JOptionPane.showInputDialog("Enter the PAYMENT details: distributor ID, publication House ID, Date, Amount");
+                            String insquery = JOptionPane.showInputDialog("Enter the PAYMENT details: Order ID, Date, Amount");
 
                             String[] itemsArray;
                             itemsArray = insquery.split(",");
 
-                            Float payment = Float.parseFloat(itemsArray[3]);
+                            String selectQuerry = "Select DISTID from SENDS where ORDERID = " + itemsArray[0];
+                            ResultSet success = statement.executeQuery(selectQuerry);
+                            System.out.println(success);
+                            Integer distID = 0;
+
+                            if(success.next())
+                            {
+                                distID = Integer.parseInt(success.getString("DISTID"));
+                            }
+
+                            Float payment = Float.parseFloat(itemsArray[2]);
 
                             String sqlStatement = "INSERT INTO DISTRIBUTORPAYS VALUES (";
-                            for(int i=0; i<itemsArray.length; i++)
-                            {
-                                sqlStatement += itemsArray[i] ;
-                                if (i != itemsArray.length-1){
-                                    sqlStatement += ",";
-                                }
-                            }
-                            sqlStatement += ");";
+                            sqlStatement += distID + ",1," + itemsArray[1] + "," + itemsArray[2] + ");";
+
                             System.out.println(sqlStatement);
-                            ResultSet success = statement.executeQuery(sqlStatement);
+                            success = statement.executeQuery(sqlStatement);
                             System.out.println(success);
 
                             //Constant Publishing House ID
                             // Retrieve the current balance for the given Publication House and Distributor
-                            ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = '"+ itemsArray[1]+"'");
+                            ResultSet rs = statement.executeQuery("select BALANCE from OWES where DISTID = '" + distID + "' and PUBHOUSEID = 1");
 
                             if(rs.next()){
                                 // If a balance exists
                                 Float currentBalance = Float.parseFloat(rs.getString("BALANCE"));
                                 currentBalance -= payment;
-                                sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + itemsArray[0] + "' and PUBHOUSEID = " + itemsArray[1] +";";
+                                sqlStatement = "UPDATE OWES SET BALANCE =" + currentBalance +" where DISTID = '" + distID + "' and PUBHOUSEID = 1;";
                                 success = statement.executeQuery(sqlStatement);
                                 System.out.println(success);
 
@@ -550,7 +556,7 @@ public class Wolf {
                                 //Constant Publishing House ID
                                 // If this is the first transaction between the given Distributor and Publication
                                 payment *= -1;
-                                sqlStatement = "INSERT INTO OWES VALUES ("+itemsArray[0]+","+ itemsArray[1] +","+ Float.toString(payment)+")";
+                                sqlStatement = "INSERT INTO OWES VALUES ("+distID+",1,"+ Float.toString(payment)+")";
                             }
 
                             success = statement.executeQuery(sqlStatement);
