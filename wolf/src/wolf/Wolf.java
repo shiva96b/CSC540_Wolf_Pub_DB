@@ -11,10 +11,10 @@ package wolf;
 // Relpace all $USER$ with your unity id and $PASSWORD$ with your 9 digit student id or updated password (if changed)
 
 import java.sql.*;
+import javax.print.DocFlavor;
 import javax.swing.*;
 
 public class Wolf {
-
 
     // Update your user info alone here
     private static final String jdbcURL = "jdbc:mariadb://classdb2.csc.ncsu.edu:3306/mravind";
@@ -56,6 +56,7 @@ public class Wolf {
                 + "5. GENERATE\n"
                 + "6. Order Creation for Distributor\n"
                 + "7. Distributor Payment\n"
+                + "8. View Editor Publications\n"
                 + "0. QUIT\n");
     }
 
@@ -153,6 +154,48 @@ public class Wolf {
                                     System.out.println();
                                 }
                         }
+                    }
+                    else if (Integer.parseInt(mainMenu) == 8) {
+                        String value = JOptionPane.showInputDialog("Input the editor by which you want to select\n");
+
+                        result = statement.executeQuery("SELECT PUBID FROM PUBLICATIONHAS WHERE EDITORSSN=" + Integer.parseInt(value) + ";");
+                        String pubIds = "";
+                        ResultSetMetaData meta = result.getMetaData();
+
+                        while(result.next()) {
+                            for(int i=1; i<=meta.getColumnCount(); i++) {
+                                pubIds += result.getString(i) + ",";
+                            }
+                        }
+
+                        if(pubIds == ""){
+                            JOptionPane.showMessageDialog(null, "The editor doesn't have any records");
+                        }
+                        else
+                        {
+                            int count = 0;
+                            result = statement.executeQuery("DESC PUBLICATION");
+                            while (result.next()) {
+                                String name = result.getString("Field");
+                                System.out.print(name + "\t\t");
+                                count = count + 1;
+                            }
+                            System.out.print("\n");
+
+                            pubIds = pubIds.substring( 0, pubIds.length() - 1);
+                            result = statement.executeQuery("select * from PUBLICATION where PUBID in (" + pubIds + ");");
+
+                            while (result.next()) {
+                                for (int i = 1; i <= count; i++) {
+                                    System.out.print(result.getString(i) + "\t\t");
+                                }
+                                System.out.println();
+                            }
+
+
+                        }
+
+
                     }
                     else if(Integer.parseInt(mainMenu) == 5) {
                         // Generate Report Query Execution with sub Operations
